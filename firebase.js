@@ -5,6 +5,7 @@ import {
   getReactNativePersistence,
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC4nmNUBn5Had70mTG6pLa9MuIDtk9xPm0",
@@ -17,15 +18,18 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// AsyncStorage = login continua depois de fechar o app
-// o try/catch é só pq no reload do Expo às vezes dava erro de "já inicializado"
 let auth;
-try {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-} catch {
+if (Platform.OS === "web") {
   auth = getAuth(app);
+} else {
+  // No mobile, persiste sessão no AsyncStorage.
+  try {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+  } catch {
+    auth = getAuth(app);
+  }
 }
 
 export { auth };

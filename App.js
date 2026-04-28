@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ActivityIndicator, View } from "react-native";
@@ -11,17 +10,18 @@ import { auth } from "./firebase";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import CotacaoScreen from "./screens/CotacaoScreen";
-import ConverterPlaceholderScreen from "./screens/ConverterPlaceholderScreen";
 
-const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TelasLogin() {
+  const [telaAuth, setTelaAuth] = useState("Login");
+
+  if (telaAuth === "Cadastro") {
+    return <RegisterScreen onGoToLogin={() => setTelaAuth("Login")} />;
+  }
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Cadastro" component={RegisterScreen} />
-    </Stack.Navigator>
+    <LoginScreen onGoToRegister={() => setTelaAuth("Cadastro")} />
   );
 }
 
@@ -47,16 +47,6 @@ function TelasPrincipais() {
           title: "Cotações",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cash-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ConverterTab"
-        component={ConverterPlaceholderScreen}
-        options={{
-          title: "Conversor",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="swap-horizontal-outline" size={size} color={color} />
           ),
         }}
       />

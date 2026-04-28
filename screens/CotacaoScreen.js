@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { signOut } from "firebase/auth";
@@ -19,14 +20,40 @@ function parseNumero(str) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function formatarUltimaAtualizacao(valorBruto) {
+  if (!valorBruto) return "—";
+  const normalizado = String(valorBruto).replace(" ", "T");
+  const data = new Date(normalizado);
+  if (Number.isNaN(data.getTime())) return valorBruto;
+  return data.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function montarUrlBandeira(codigoPais) {
+  return `https://flagsapi.com/${codigoPais}/flat/64.png`;
+}
+
 function BandeirasPar({ esquerda, direita }) {
   return (
     <View style={styles.flagWrap}>
       <View style={[styles.flagCirculo, { left: 0, zIndex: 2 }]}>
-        <Text style={styles.flagEmoji}>{esquerda}</Text>
+        <Image
+          source={{ uri: montarUrlBandeira(esquerda) }}
+          style={styles.flagImg}
+          resizeMode="cover"
+        />
       </View>
       <View style={[styles.flagCirculo, { left: 26, zIndex: 1 }]}>
-        <Text style={styles.flagEmoji}>{direita}</Text>
+        <Image
+          source={{ uri: montarUrlBandeira(direita) }}
+          style={styles.flagImg}
+          resizeMode="cover"
+        />
       </View>
     </View>
   );
@@ -82,13 +109,16 @@ export default function CotacaoScreen() {
   }
 
   function cardMoeda(item) {
-    const { api, codigoPar, tituloUnidade, bandEsq, bandDir } = item;
+    const { api, codigoPar, nomeMoeda, siglaMoeda, tituloUnidade, bandEsq, bandDir } = item;
     if (!api) return null;
     const valor = parseNumero(api.bid);
     return (
       <View style={styles.cardMoeda} key={codigoPar}>
         <BandeirasPar esquerda={bandEsq} direita={bandDir} />
         <View style={styles.cardMeio}>
+          <Text style={styles.nomeMoeda}>
+            {nomeMoeda} ({siglaMoeda})
+          </Text>
           <Text style={styles.paridade}>{codigoPar}</Text>
           <Text style={styles.unidade}>{tituloUnidade}</Text>
         </View>
@@ -106,16 +136,20 @@ export default function CotacaoScreen() {
     {
       api: usd,
       codigoPar: "USD / BRL",
+      nomeMoeda: "Dólar Americano",
+      siglaMoeda: "USD",
       tituloUnidade: "1 Dólar Americano",
-      bandEsq: "🇺🇸",
-      bandDir: "🇧🇷",
+      bandEsq: "US",
+      bandDir: "BR",
     },
     {
       api: eur,
       codigoPar: "EUR / BRL",
+      nomeMoeda: "Euro",
+      siglaMoeda: "EUR",
       tituloUnidade: "1 Euro",
-      bandEsq: "🇪🇺",
-      bandDir: "🇧🇷",
+      bandEsq: "PT",
+      bandDir: "BR",
     },
   ];
 
@@ -126,16 +160,19 @@ export default function CotacaoScreen() {
           <TouchableOpacity style={styles.headerLado} onPress={() => signOut(auth)} hitSlop={12}>
             <Text style={styles.sair}>Sair</Text>
           </TouchableOpacity>
-          <Text style={styles.tituloApp}>Cotação de Moedas</Text>
+          <View style={styles.tituloWrap}>
+            <Text style={styles.tituloApp}>Cotação de</Text>
+            <Text style={styles.tituloApp}>Moedas</Text>
+          </View>
           <View style={styles.headerLado} />
         </View>
       </View>
 
       <View style={styles.cardStatusWrap}>
         <View style={styles.cardStatus}>
-          <Text style={styles.statusTitulo}>Cotação atual</Text>
+          <Text style={styles.statusTitulo}>Cotação Atual</Text>
           <Text style={styles.statusSub}>
-            Última atualização: {ultima || "—"}
+            Última atualização: {formatarUltimaAtualizacao(ultima)}
           </Text>
           {carregando && (
             <ActivityIndicator style={{ marginTop: 8 }} color="#0d9488" />
@@ -170,47 +207,53 @@ export default function CotacaoScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#eef0f4",
+    backgroundColor: "#f2f4f8",
   },
   headerAzul: {
-    backgroundColor: "#1e3a5f",
-    paddingBottom: 48,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    backgroundColor: "#1a2f57",
+    paddingBottom: 58,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
   },
   headerLado: {
-    width: 56,
+    width: 64,
+  },
+  tituloWrap: {
+    flex: 1,
+    alignItems: "center",
   },
   tituloApp: {
     color: "#fff",
-    fontSize: 22,
+    fontSize: 27,
     fontWeight: "700",
-    flex: 1,
     textAlign: "center",
+    lineHeight: 30,
   },
   sair: {
-    color: "#cbd5e1",
+    color: "#e2e8f0",
     fontSize: 14,
+    fontWeight: "600",
   },
   cardStatusWrap: {
-    marginTop: -36,
+    marginTop: -42,
     paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   cardStatus: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 18,
-    elevation: 4,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    elevation: 5,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   statusTitulo: {
     fontWeight: "700",
@@ -219,29 +262,29 @@ const styles = StyleSheet.create({
   },
   statusSub: {
     marginTop: 6,
-    color: "#64748b",
-    fontSize: 14,
+    color: "#6b7280",
+    fontSize: 13,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   cardMoeda: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 18,
+    padding: 15,
     marginBottom: 12,
-    elevation: 3,
+    elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
   },
   flagWrap: {
     width: 70,
@@ -260,12 +303,20 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  flagEmoji: {
-    fontSize: 22,
+  flagImg: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
   },
   cardMeio: {
     flex: 1,
     justifyContent: "center",
+  },
+  nomeMoeda: {
+    fontWeight: "600",
+    fontSize: 12,
+    color: "#334155",
+    marginBottom: 3,
   },
   paridade: {
     fontWeight: "700",
@@ -273,7 +324,7 @@ const styles = StyleSheet.create({
     color: "#0f172a",
   },
   unidade: {
-    marginTop: 4,
+    marginTop: 2,
     color: "#64748b",
     fontSize: 13,
   },
@@ -282,7 +333,7 @@ const styles = StyleSheet.create({
   },
   valorBrl: {
     fontWeight: "700",
-    fontSize: 17,
+    fontSize: 29,
     color: "#0f172a",
   },
   variacao: {
@@ -292,14 +343,19 @@ const styles = StyleSheet.create({
   },
   rodapeBtn: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    backgroundColor: "#eef0f4",
+    paddingTop: 10,
+    backgroundColor: "#f2f4f8",
   },
   btnAtualizar: {
     backgroundColor: "#14b8a6",
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: 17,
+    borderRadius: 999,
     alignItems: "center",
+    elevation: 4,
+    shadowColor: "#0f766e",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
   },
   btnAtualizarTxt: {
     color: "#fff",
